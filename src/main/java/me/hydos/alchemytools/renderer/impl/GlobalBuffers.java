@@ -259,15 +259,15 @@ public class GlobalBuffers {
             var dataBuffer = materialsStagingBuffer.mappedMem();
 
             var texture = textureCache.getTexture(material.diffuseTexture());
-            if (texture != null) textureList.add(texture);
+            if (texture != null && !textureList.contains(texture)) textureList.add(texture);
             var textureIdx = textureCache.getPosition(material.diffuseTexture());
 
             texture = textureCache.getTexture(material.normalTexture());
-            if (texture != null) textureList.add(texture);
+            if (texture != null && !textureList.contains(texture)) textureList.add(texture);
             var normalMapIdx = textureCache.getPosition(material.normalTexture());
 
             texture = textureCache.getTexture(material.metalRoughMap());
-            if (texture != null) textureList.add(texture);
+            if (texture != null && !textureList.contains(texture)) textureList.add(texture);
             var metalRoughMapIdx = textureCache.getPosition(material.metalRoughMap());
 
             vulkanMaterialList.add(new GpuModel.VulkanMaterial(dataBuffer.position() / MATERIAL_SIZE));

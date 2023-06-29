@@ -61,9 +61,8 @@ public class Image implements VkWrapper<Long> {
     }
 
     @Override
-    public void close() {
-        vkDestroyImage(this.device.vk(), this.image, null);
-        vkFreeMemory(this.device.vk(), this.allocation, null);
+    public void close() { // TODO: make allocation record which is long and VmaAllocator
+        Vma.vmaDestroyImage(device.memoryAllocator.vma(), image, allocation);
     }
 
     @Override

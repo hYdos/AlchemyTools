@@ -8,6 +8,7 @@ import me.hydos.alchemytools.renderer.scene.ModelData;
 import me.hydos.alchemytools.renderer.scene.ModelProcessor;
 import me.hydos.alchemytools.renderer.scene.RenderEntity;
 import me.hydos.alchemytools.renderer.wrapper.init.VulkanCreationContext;
+import me.hydos.alchemytools.util.LoggerSetup;
 import me.hydos.alchemytools.util.RootDirectoryLocator;
 import me.hydos.alchemytools.util.assimp.AssimpModelLoader;
 import me.hydos.alchemytools.util.model.SceneNode;
@@ -26,7 +27,7 @@ public class AssimpTestScene {
     public final Display display;
 
     public AssimpTestScene() {
-        System.loadLibrary("renderdoc");
+        LoggerSetup.onInitialize();
         this.display = new Window("Assimp Test Scene");
         this.scene = new me.hydos.alchemytools.renderer.scene.Scene(display);
         this.renderer = new Renderer(display, new VulkanCreationContext("assimp_test_scene"), this.scene);

@@ -25,6 +25,7 @@ public class RenderPass implements VkWrapper<Long> {
 
     @Override
     public void close() {
+        for (var attachment : attachments) attachment.close();
         vkDestroyRenderPass(device.vk(), renderPass, null);
     }
 

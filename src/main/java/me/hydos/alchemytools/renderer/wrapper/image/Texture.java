@@ -26,7 +26,7 @@ public class Texture {
     private VkBuffer stgBuffer;
 
     public Texture(Device device, String textureId, ByteBuffer rgbaBuffer, int width, int height, boolean transparent, int imageFormat) {
-        LOGGER.info("Creating texture [{}]", textureId);
+        LOGGER.info("Creating texture \"{}\"", textureId);
         this.width = width;
         this.height = height;
         this.mipLevels = (int) (log2(Math.min(width, height)) + 1);
@@ -232,14 +232,14 @@ public class Texture {
 
     public void recordTextureTransition(CmdBuffer cmd) {
         if (this.stgBuffer != null && !this.recordedTransition) {
-            LOGGER.info("Recording transition for texture [{}]", this.textureId);
+            LOGGER.info("Recording CPU -> GPU transition for texture \"{}\"", this.textureId);
             this.recordedTransition = true;
             try (var stack = MemoryStack.stackPush()) {
                 recordImageTransition(stack, cmd);
                 recordCopyBuffer(stack, cmd, this.stgBuffer);
                 recordGenerateMipMaps(stack, cmd);
             }
-        } else LOGGER.info("Texture [{}] has already been transitioned", this.textureId);
+        } else LOGGER.warn("Texture [{}] has already been transitioned", this.textureId);
     }
 
     private static int hdrToRgb(float hdr) {

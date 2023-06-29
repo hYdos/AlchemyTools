@@ -31,7 +31,7 @@ import java.util.List;
 import static org.lwjgl.vulkan.VK11.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 public class Renderer {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Renderer.class);
+    public static final Logger LOGGER = LoggerFactory.getLogger(Renderer.class);
     private final GpuAnimator computeAnimator;
     private final GeometryPass geometryPass;
     private final LightPass lightPass;

@@ -23,31 +23,30 @@ public class PhysicalDevice implements VkWrapper<VkPhysicalDevice> {
     private final VkPhysicalDeviceFeatures vkPhysicalDeviceFeatures;
     private final VkPhysicalDeviceProperties vkPhysicalDeviceProperties;
     private final VkQueueFamilyProperties.Buffer vkQueueFamilyProps;
-    private final Set<Integer> suportedSampleCount;
+    private final Set<Integer> supportedSampleCount;
 
     private PhysicalDevice(VkPhysicalDevice vkPhysicalDevice) {
         try (var stack = MemoryStack.stackPush()) {
             this.vkPhysicalDevice = vkPhysicalDevice;
 
-            var intBuffer = stack.mallocInt(1);
+            var pInt = stack.mallocInt(1);
 
             // Get device properties
             this.vkPhysicalDeviceProperties = VkPhysicalDeviceProperties.calloc();
             vkGetPhysicalDeviceProperties(vkPhysicalDevice, this.vkPhysicalDeviceProperties);
+            LOGGER.info("Creating Device \"{}\"", getDeviceName());
 
             // Get device extensions
-            VkUtils.ok(vkEnumerateDeviceExtensionProperties(vkPhysicalDevice, (String) null, intBuffer, null),
-                    "Failed to get number of device extension properties");
-            this.vkDeviceExtensions = VkExtensionProperties.calloc(intBuffer.get(0));
-            VkUtils.ok(vkEnumerateDeviceExtensionProperties(vkPhysicalDevice, (String) null, intBuffer, this.vkDeviceExtensions),
-                    "Failed to get extension properties");
+            VkUtils.ok(vkEnumerateDeviceExtensionProperties(vkPhysicalDevice, (String) null, pInt, null), "Failed to get number of device extension properties");
+            this.vkDeviceExtensions = VkExtensionProperties.calloc(pInt.get(0));
+            VkUtils.ok(vkEnumerateDeviceExtensionProperties(vkPhysicalDevice, (String) null, pInt, this.vkDeviceExtensions), "Failed to get extension properties");
 
-            this.suportedSampleCount = calSupportedSampleCount(this.vkPhysicalDeviceProperties);
+            this.supportedSampleCount = calcSupportedSampleCount(this.vkPhysicalDeviceProperties);
 
             // Get Queue family properties
-            vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, intBuffer, null);
-            this.vkQueueFamilyProps = VkQueueFamilyProperties.calloc(intBuffer.get(0));
-            vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, intBuffer, this.vkQueueFamilyProps);
+            vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, pInt, null);
+            this.vkQueueFamilyProps = VkQueueFamilyProperties.calloc(pInt.get(0));
+            vkGetPhysicalDeviceQueueFamilyProperties(vkPhysicalDevice, pInt, this.vkQueueFamilyProps);
 
             this.vkPhysicalDeviceFeatures = VkPhysicalDeviceFeatures.calloc();
             vkGetPhysicalDeviceFeatures(vkPhysicalDevice, this.vkPhysicalDeviceFeatures);
@@ -59,8 +58,7 @@ public class PhysicalDevice implements VkWrapper<VkPhysicalDevice> {
     }
 
     public static PhysicalDevice createPhysicalDevice(Instance instance) {
-        LOGGER.info("Selecting physical devices");
-        PhysicalDevice selectedPhysicalDevice = null;
+        PhysicalDevice selectedPhysicalDevice;
         try (var stack = MemoryStack.stackPush()) {
             // Get available devices
             var pPhysicalDevices = getPhysicalDevices(instance, stack);
@@ -75,10 +73,10 @@ public class PhysicalDevice implements VkWrapper<VkPhysicalDevice> {
 
                 var deviceName = physicalDevice.getDeviceName();
                 if (physicalDevice.hasGraphicsQueueFamily() && physicalDevice.hasKHRSwapChainExtension()) {
-                    LOGGER.info("Device [{}] supports required extensions", deviceName);
+                    LOGGER.info("Viable: true");
                     devices.add(physicalDevice);
                 } else {
-                    LOGGER.info("Device [{}] does not support required extensions", deviceName);
+                    LOGGER.info("Viable: false");
                     physicalDevice.close();
                 }
             }
@@ -111,7 +109,7 @@ public class PhysicalDevice implements VkWrapper<VkPhysicalDevice> {
         return pPhysicalDevices;
     }
 
-    private Set<Integer> calSupportedSampleCount(VkPhysicalDeviceProperties devProps) {
+    private Set<Integer> calcSupportedSampleCount(VkPhysicalDeviceProperties devProps) {
         Set<Integer> result = new HashSet<>();
         var colorCounts = Integer.toUnsignedLong(this.vkPhysicalDeviceProperties.limits().framebufferColorSampleCounts());
         LOGGER.info("Color max samples: {}", colorCounts);
@@ -193,6 +191,6 @@ public class PhysicalDevice implements VkWrapper<VkPhysicalDevice> {
     }
 
     public boolean supportsSampleCount(int numSamples) {
-        return this.suportedSampleCount.contains(numSamples);
+        return this.supportedSampleCount.contains(numSamples);
     }
 }

@@ -2,6 +2,7 @@ package me.hydos.alchemytools.renderer.impl.geometry;
 
 import me.hydos.alchemytools.renderer.impl.GlobalBuffers;
 import me.hydos.alchemytools.renderer.impl.ImplUtils;
+import me.hydos.alchemytools.renderer.impl.Renderer;
 import me.hydos.alchemytools.renderer.impl.TextureCache;
 import me.hydos.alchemytools.renderer.scene.Scene;
 import me.hydos.alchemytools.renderer.wrapper.cmd.CmdBuffer;
@@ -77,7 +78,7 @@ public class GeometryPass implements Closeable {
         createShaders();
         createDescriptorPool();
         createDescriptorSets(numImages, globalBuffers);
-        System.out.println("please un-hardcode createPipeline in " + this.getClass().getName() + " at some point ");
+        Renderer.LOGGER.warn("please un-hardcode createPipeline in " + this.getClass().getName() + " at some point ");
         createPipeline(3); // FIXME: NO
         VkUtils.copyMatrixToBuffer(this.projMatrixUniform, scene.getProjection().getProjectionMatrix());
         this.barrier = new MemoryBarrier(VK_ACCESS_SHADER_WRITE_BIT, VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT);

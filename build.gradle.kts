@@ -29,9 +29,12 @@ dependencies {
     implementation("org.jetbrains:annotations:24.0.1")
 
     // Logger
+    implementation("org.jline:jline:3.16.0")
+    implementation("org.jline:jline-reader:3.12.1")
+    implementation("net.minecrell:terminalconsoleappender:1.2.0") { isTransitive = false }
     implementation("org.slf4j:slf4j-api:2.0.7")
-    runtimeOnly("org.apache.logging.log4j:log4j-core:2.20.0")
-    runtimeOnly("org.apache.logging.log4j:log4j-slf4j2-impl:2.20.0")
+    runtimeOnly("org.apache.logging.log4j:log4j-core:2.19.0")
+    runtimeOnly("org.apache.logging.log4j:log4j-slf4j2-impl:2.19.0")
 
     // LWJGL
     implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))

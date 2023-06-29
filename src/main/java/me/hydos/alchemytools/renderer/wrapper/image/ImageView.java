@@ -44,6 +44,11 @@ public class ImageView implements VkWrapper<Long> {
     }
 
     @Override
+    public String toString() {
+        return "ImageView[address=0x" + Long.toHexString(imageView) + "]";
+    }
+
+    @Override
     public Long vk() {
         return imageView;
     }

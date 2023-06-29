@@ -46,3 +46,5 @@ shaders/
 *.log
 .idea/
 engine.config.json
+logs/
+/log4j2.alchemytools.xml

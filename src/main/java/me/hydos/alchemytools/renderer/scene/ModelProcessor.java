@@ -28,30 +28,32 @@ public class ModelProcessor {
     public static final int MAX_WEIGHTS = 4;
 
     public static ModelData loadModel(String modelId, ModelLocator locator, SceneNode sceneNode, List<Animation> animations) {
-        LOGGER.info("Loading model \"{}\"", modelId);
-
-        var meshDataList = new ArrayList<ModelData.MeshData>();
-        for (var i = 0; i < sceneNode.meshes().length; i++) {
-            var meshData = processMesh(sceneNode.meshes()[i]);
-            meshDataList.add(meshData);
-        }
-
-        var modelData = new ModelData(modelId, meshDataList, sceneNode.materials(), locator);
-
-        if (animations.size() > 0) {
-            LOGGER.info("Processing animations");
-            List<ModelData.AnimMeshData> animMeshDataList = new ArrayList<>();
+        try {
+            var meshDataList = new ArrayList<ModelData.MeshData>();
             for (var i = 0; i < sceneNode.meshes().length; i++) {
-                var animMeshData = processBones(sceneNode.meshes()[i], sceneNode);
-                animMeshDataList.add(animMeshData);
+                var meshData = processMesh(sceneNode.meshes()[i]);
+                meshDataList.add(meshData);
             }
 
-            modelData.setAnimMeshDataList(animMeshDataList);
-            modelData.setAnimations(processAnimations(animations));
-        }
+            var modelData = new ModelData(modelId, meshDataList, sceneNode.materials(), locator);
 
-        LOGGER.info("Loaded model [{}]", modelId);
-        return modelData;
+            if (animations.size() > 0) {
+                LOGGER.debug("Processing animations");
+                List<ModelData.AnimMeshData> animMeshDataList = new ArrayList<>();
+                for (var i = 0; i < sceneNode.meshes().length; i++) {
+                    var animMeshData = processBones(sceneNode.meshes()[i], sceneNode);
+                    animMeshDataList.add(animMeshData);
+                }
+
+                modelData.setAnimMeshDataList(animMeshDataList);
+                modelData.setAnimations(processAnimations(animations));
+            }
+
+            LOGGER.debug("Loaded model \"{}\"", modelId);
+            return modelData;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed loading model \"" + modelId + "\"");
+        }
     }
 
     private static List<ModelData.PreComputedAnimation> processAnimations(List<Animation> animations) {

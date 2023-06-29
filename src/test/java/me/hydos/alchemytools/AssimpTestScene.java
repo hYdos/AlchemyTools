@@ -10,8 +10,7 @@ import me.hydos.alchemytools.renderer.scene.RenderEntity;
 import me.hydos.alchemytools.renderer.wrapper.init.VulkanCreationContext;
 import me.hydos.alchemytools.util.RootDirectoryLocator;
 import me.hydos.alchemytools.util.assimp.AssimpModelLoader;
-import me.hydos.alchemytools.util.model.Model;
-import org.joml.Vector3f;
+import me.hydos.alchemytools.util.model.SceneNode;
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -27,7 +26,7 @@ public class AssimpTestScene {
     public final Display display;
 
     public AssimpTestScene() {
-        //System.loadLibrary("renderdoc");
+        System.loadLibrary("renderdoc");
         this.display = new Window("Assimp Test Scene");
         this.scene = new me.hydos.alchemytools.renderer.scene.Scene(display);
         this.renderer = new Renderer(display, new VulkanCreationContext("assimp_test_scene"), this.scene);
@@ -59,10 +58,7 @@ public class AssimpTestScene {
         for (var model : assimpModels) {
             var data = ModelProcessor.loadModel(model.name(), locator, model, List.of());
 
-            var e = new RenderEntity("some entity_" + model.name(), model.name(), new Vector3f(0.0f, 0.0f, 0.0f)); // TODO: multiple models for 1 entity? maybe even a tree scene layout
-            e.getRotation()
-                    .rotateY((float) Math.toRadians(-90));
-            e.recalculate();
+            var e = new RenderEntity("some entity_" + model.name(), model); // TODO: multiple models for 1 entity? maybe even a tree scene layout
 
             scene.addEntity(e);
             models.add(data);
@@ -71,7 +67,8 @@ public class AssimpTestScene {
         renderer.loadModels(models);
 
         var camera = scene.getCamera();
-        camera.setPosition(1, 2, 5);
+        camera.setPosition(6, 2, -2);
+        camera.setRotation((float) 0, (float) Math.toRadians(-100));
         camera.recalculate();
 
         scene.setLights(new Light[]{
@@ -79,9 +76,9 @@ public class AssimpTestScene {
         });
     }
 
-    private void loadTextures(Model model) {
-        for (int i = 0; i < model.textures().length; i++) {
-            var texture = model.textures()[i];
+    private void loadTextures(SceneNode sceneNode) {
+        for (int i = 0; i < sceneNode.textures().length; i++) {
+            var texture = sceneNode.textures()[i];
             renderer.textureCache.createTexture(renderer.device, "*" + i, texture.data(), texture.width(), texture.height(), false, VK_FORMAT_R8G8B8A8_SRGB);
         }
     }

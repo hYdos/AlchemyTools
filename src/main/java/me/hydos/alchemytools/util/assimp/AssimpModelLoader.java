@@ -4,10 +4,11 @@ import me.hydos.alchemytools.renderer.scene.ModelData;
 import me.hydos.alchemytools.scene.ARGBCpuTexture;
 import me.hydos.alchemytools.util.ModelLocator;
 import me.hydos.alchemytools.util.model.Mesh;
-import me.hydos.alchemytools.util.model.Model;
+import me.hydos.alchemytools.util.model.SceneNode;
 import me.hydos.alchemytools.util.model.animation.BoneNode;
 import me.hydos.alchemytools.util.model.animation.Skeleton;
 import me.hydos.alchemytools.util.model.bone.Bone;
+import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -20,13 +21,14 @@ import org.lwjgl.system.MemoryUtil;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static java.util.Objects.requireNonNull;
 
 public class AssimpModelLoader {
 
-    public static Model[] load(String name, ModelLocator locator, int extraFlags) {
+    public static SceneNode[] load(String name, ModelLocator locator, int extraFlags) {
         var fileIo = AIFileIO.create()
                 .OpenProc((pFileIO, pFileName, openMode) -> {
                     var fileName = MemoryUtil.memUTF8(pFileName);
@@ -65,29 +67,37 @@ public class AssimpModelLoader {
         if (scene == null) throw new RuntimeException(Assimp.aiGetErrorString());
         var rootNode = scene.mRootNode();
 
-        var models = new Model[rootNode.mNumChildren()];
-        for (int i = 0; i < rootNode.mNumChildren(); i++) {
-            var object = AINode.create(rootNode.mChildren().get(i));
-            models[i] = readScene(scene, object);
-        }
+        var nodes = new ArrayList<SceneNode>();
+        readNodeTree(scene, scene.mRootNode(), null, nodes);
 
         Assimp.aiReleaseImport(scene);
-        return models;
+        return nodes.toArray(SceneNode[]::new);
     }
 
-    private static Model readScene(AIScene scene, AINode node) {
+    private static void readNodeTree(AIScene scene, AINode node, Matrix4f rootTransform, List<SceneNode> nodes) {
+        if(rootTransform == null) rootTransform = BoneNode.from(node.mTransformation());
+
+        for (int i = 0; i < node.mNumChildren(); i++) {
+            var object = AINode.create(node.mChildren().get(i));
+            nodes.add(readScene(scene, object, rootTransform));
+            readNodeTree(scene, object, rootTransform, nodes);
+        }
+    }
+
+    private static SceneNode readScene(AIScene scene, AINode node, Matrix4f parentTransform) {
         var skeleton = new Skeleton(BoneNode.create(node));
         var materials = readMaterialData(scene);
         var textures = readTextureData(scene);
-        var meshes = readMeshData(skeleton, node, new HashMap<>());
-        return new Model(node.mName().dataString(), materials, textures, meshes, skeleton);
+        var meshes = readMeshData(skeleton, scene, node, new HashMap<>());
+        var transform = BoneNode.from(node.mTransformation()).mul(parentTransform);
+        return new SceneNode(node.mName().dataString(), transform, materials, textures, meshes, skeleton);
     }
 
-    private static Mesh[] readMeshData(Skeleton skeleton, AINode node, Map<String, Bone> boneMap) {
+    private static Mesh[] readMeshData(Skeleton skeleton, AIScene scene, AINode node, Map<String, Bone> boneMap) {
         var meshes = new Mesh[node.mNumMeshes()];
 
         for (var i = 0; i < node.mNumMeshes(); i++) {
-            var mesh = AIMesh.create(node.mMeshes().get(i));
+            var mesh = AIMesh.create(scene.mMeshes().get(node.mMeshes().get(i)));
             var name = mesh.mName().dataString();
             var material = mesh.mMaterialIndex();
             var indices = new ArrayList<Integer>();
@@ -99,10 +109,7 @@ public class AssimpModelLoader {
             var bones = new ArrayList<Bone>();
 
             // Indices
-            System.out.println("start");
-            System.out.println("faces");
             var aiFaces = mesh.mFaces();
-            System.out.println("indices");
             for (var j = 0; j < mesh.mNumFaces(); j++) {
                 var aiFace = aiFaces.get(j);
                 IntBuffer pIndices = aiFace.mIndices();
@@ -112,13 +119,11 @@ public class AssimpModelLoader {
             }
 
             // Positions
-            System.out.println("positions");
             var aiVert = mesh.mVertices();
             for (var j = 0; j < mesh.mNumVertices(); j++)
                 positions.add(new Vector3f(aiVert.get(j).x(), aiVert.get(j).y(), aiVert.get(j).z()));
 
             // UV's
-            System.out.println("uvs");
             var aiUV = mesh.mTextureCoords(0);
             if (aiUV != null) while (aiUV.remaining() > 0) {
                 var uv = aiUV.get();
@@ -126,25 +131,21 @@ public class AssimpModelLoader {
             }
 
             // Normals
-            System.out.println("normals");
             var aiNormals = mesh.mNormals();
             if (aiNormals != null) for (var j = 0; j < mesh.mNumVertices(); j++)
                 normals.add(new Vector3f(aiNormals.get(j).x(), aiNormals.get(j).y(), aiNormals.get(j).z()));
 
             // Tangents
-            System.out.println("tangents");
             var aiTangents = mesh.mTangents();
             if (aiTangents != null) for (var j = 0; j < mesh.mNumVertices(); j++)
                 tangents.add(new Vector3f(aiTangents.get(j).x(), aiTangents.get(j).y(), aiTangents.get(j).z()));
 
             // Bi-Tangents
-            System.out.println("biTangents");
             var aiBiTangents = mesh.mBitangents();
             if (aiBiTangents != null) for (var j = 0; j < mesh.mNumVertices(); j++)
                 biTangents.add(new Vector3f(aiBiTangents.get(j).x(), aiBiTangents.get(j).y(), aiBiTangents.get(j).z()));
 
             // Bones
-            System.out.println("bones");
             if (mesh.mBones() != null) {
                 var aiBones = requireNonNull(mesh.mBones());
 
@@ -156,10 +157,8 @@ public class AssimpModelLoader {
                 }
             }
 
-            System.out.println("end");
             skeleton.store(bones.toArray(Bone[]::new));
             meshes[i] = new Mesh(name, material, indices, positions, uvs, normals, tangents, biTangents, bones);
-            System.out.println("real end");
         }
 
         skeleton.calculateBoneData();

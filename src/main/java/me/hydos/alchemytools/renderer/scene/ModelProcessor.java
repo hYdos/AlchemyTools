@@ -4,7 +4,7 @@ import me.hydos.alchemytools.renderer.wrapper.core.Configuration;
 import me.hydos.alchemytools.util.ModelLocator;
 import me.hydos.alchemytools.util.Pair;
 import me.hydos.alchemytools.util.model.Mesh;
-import me.hydos.alchemytools.util.model.Model;
+import me.hydos.alchemytools.util.model.SceneNode;
 import me.hydos.alchemytools.util.model.animation.Animation;
 import org.joml.Matrix4f;
 import org.slf4j.Logger;
@@ -27,22 +27,22 @@ public class ModelProcessor {
     public static final int MAX_JOINTS = 200;
     public static final int MAX_WEIGHTS = 4;
 
-    public static ModelData loadModel(String modelId, ModelLocator locator, Model model, List<Animation> animations) {
+    public static ModelData loadModel(String modelId, ModelLocator locator, SceneNode sceneNode, List<Animation> animations) {
         LOGGER.info("Loading model \"{}\"", modelId);
 
         var meshDataList = new ArrayList<ModelData.MeshData>();
-        for (var i = 0; i < model.meshes().length; i++) {
-            var meshData = processMesh(model.meshes()[i]);
+        for (var i = 0; i < sceneNode.meshes().length; i++) {
+            var meshData = processMesh(sceneNode.meshes()[i]);
             meshDataList.add(meshData);
         }
 
-        var modelData = new ModelData(modelId, meshDataList, model.materials(), locator);
+        var modelData = new ModelData(modelId, meshDataList, sceneNode.materials(), locator);
 
         if (animations.size() > 0) {
             LOGGER.info("Processing animations");
             List<ModelData.AnimMeshData> animMeshDataList = new ArrayList<>();
-            for (var i = 0; i < model.meshes().length; i++) {
-                var animMeshData = processBones(model.meshes()[i], model);
+            for (var i = 0; i < sceneNode.meshes().length; i++) {
+                var animMeshData = processBones(sceneNode.meshes()[i], sceneNode);
                 animMeshDataList.add(animMeshData);
             }
 
@@ -67,7 +67,7 @@ public class ModelProcessor {
         return processedAnimations;
     }
 
-    private static ModelData.AnimMeshData processBones(Mesh mesh, Model model) {
+    private static ModelData.AnimMeshData processBones(Mesh mesh, SceneNode sceneNode) {
         var vertBoneWeights = new HashMap<Integer, List<Pair<Integer, Float>>>();
         var boneIds = new ArrayList<Integer>();
         var weights = new ArrayList<Float>();
@@ -76,7 +76,7 @@ public class ModelProcessor {
             for (var i = 0; i < bone.weights.length; i++) {
                 var weight = bone.weights[i];
                 var map = vertBoneWeights.computeIfAbsent(weight.vertexId, integer -> new ArrayList<>());
-                map.add(new Pair<>(model.skeleton().getId(bone), weight.weight));
+                map.add(new Pair<>(sceneNode.skeleton().getId(bone), weight.weight));
             }
 
         var vertexCount = mesh.positions().size();

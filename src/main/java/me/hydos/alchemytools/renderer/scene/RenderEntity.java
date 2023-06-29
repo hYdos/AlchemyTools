@@ -1,5 +1,6 @@
 package me.hydos.alchemytools.renderer.scene;
 
+import me.hydos.alchemytools.util.model.SceneNode;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -12,15 +13,15 @@ public class RenderEntity {
     private final Vector3f position;
     private final Quaternionf rotation;
     private AnimationInstance animationInstance;
-    private float scale;
+    private Vector3f scale;
 
-    public RenderEntity(String id, String modelId, Vector3f position) {
+    public RenderEntity(String id, SceneNode sceneNode) {
         this.id = id;
-        this.modelId = modelId;
-        this.position = position;
-        this.scale = 1;
-        this.rotation = new Quaternionf();
-        this.modelMatrix = new Matrix4f();
+        this.modelId = sceneNode.name();
+        this.position = sceneNode.transform().getTranslation(new Vector3f());
+        this.scale = sceneNode.transform().getScale(new Vector3f());
+        this.rotation = sceneNode.transform().getUnnormalizedRotation(new Quaternionf());
+        this.modelMatrix = new Matrix4f(sceneNode.transform());
         recalculate();
     }
 
@@ -52,11 +53,11 @@ public class RenderEntity {
         return this.rotation;
     }
 
-    public float getScale() {
+    public Vector3f getScale() {
         return this.scale;
     }
 
-    public void setScale(float scale) {
+    public void setScale(Vector3f scale) {
         this.scale = scale;
         recalculate();
     }
@@ -73,7 +74,7 @@ public class RenderEntity {
     }
 
     public void recalculate() {
-        this.modelMatrix.translationRotateScale(this.position, this.rotation, this.scale);
+        this.modelMatrix.identity().translationRotateScale(this.position, this.rotation, this.scale);
     }
 
     public static class AnimationInstance {

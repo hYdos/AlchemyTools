@@ -58,7 +58,7 @@ public class ModelProcessor {
 
     private static List<ModelData.PreComputedAnimation> processAnimations(List<Animation> animations) {
         var processedAnimations = new ArrayList<ModelData.PreComputedAnimation>();
-        var ups = Configuration.getInstance().getUpdatesPerSecond();
+        var ups = Configuration.getInstance().animationFps;
         for (var animation : animations) {
             var framesNeeded = (ups / animation.ticksPerSecond) * animation.animationDuration;
             var frames = new ArrayList<Matrix4f[]>();

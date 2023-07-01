@@ -56,7 +56,7 @@ public class GeometryPass implements Closeable {
     private VkBuffer projMatrixUniform;
     private ShaderProgram shaderProgram;
     private DescriptorSetLayout.StorageDescriptorSetLayout storageDescriptorSetLayout;
-    private Swapchain swapChain;
+    private Swapchain swapchain;
     private TextureDescriptorSet textureDescriptorSet;
     private DescriptorSetLayout.SamplerDescriptorSetLayout textureDescriptorSetLayout;
     private TextureSampler textureSampler;
@@ -64,17 +64,17 @@ public class GeometryPass implements Closeable {
     private VkBuffer[] viewMatricesBuffer;
     private DescriptorSet.UniformDescriptorSet[] viewMatricesDescriptorSets;
 
-    public GeometryPass(Swapchain swapChain, PipelineCache cache, Scene scene, GlobalBuffers globalBuffers) {
-        this.swapChain = swapChain;
+    public GeometryPass(Swapchain swapchain, PipelineCache cache, Scene scene, GlobalBuffers globalBuffers) {
+        this.swapchain = swapchain;
         this.cache = cache;
         this.scene = scene;
-        this.device = swapChain.getDevice();
+        this.device = swapchain.getDevice();
         this.constants = new ShaderConstants.Builder()
-                .entry(Integer.BYTES, data -> data.putInt(Configuration.getInstance().getMaxTextures()))
+                .entry(Integer.BYTES, data -> data.putInt(Configuration.getInstance().swapchainImgCount))
                 .build();
 
-        this.frameBuffer = new GeometryFrameBuffer(swapChain);
-        var numImages = swapChain.getImageCount();
+        this.frameBuffer = new GeometryFrameBuffer(swapchain);
+        var numImages = swapchain.getImageCount();
         createShaders();
         createDescriptorPool();
         createDescriptorSets(numImages, globalBuffers);
@@ -102,8 +102,8 @@ public class GeometryPass implements Closeable {
     private void createDescriptorPool() {
         var settings = Configuration.getInstance();
         var descriptorTypeCounts = new ArrayList<DescriptorPool.DescriptorTypeCount>();
-        descriptorTypeCounts.add(new DescriptorPool.DescriptorTypeCount(this.swapChain.getImageCount() + 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER));
-        descriptorTypeCounts.add(new DescriptorPool.DescriptorTypeCount(settings.getMaxMaterials() * 3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER));
+        descriptorTypeCounts.add(new DescriptorPool.DescriptorTypeCount(this.swapchain.getImageCount() + 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER));
+        descriptorTypeCounts.add(new DescriptorPool.DescriptorTypeCount(settings.maxMaterials * 3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER));
         descriptorTypeCounts.add(new DescriptorPool.DescriptorTypeCount(1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC));
         descriptorTypeCounts.add(new DescriptorPool.DescriptorTypeCount(1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER));
         this.pools = new PoolManager(this.device, descriptorTypeCounts);
@@ -112,7 +112,7 @@ public class GeometryPass implements Closeable {
     private void createDescriptorSets(int numImages, GlobalBuffers globalBuffers) {
         var settings = Configuration.getInstance();
         this.uniformDescriptorSetLayout = new DescriptorSetLayout.UniformDescriptorSetLayout(this.device, 0, VK_SHADER_STAGE_VERTEX_BIT);
-        this.textureDescriptorSetLayout = new DescriptorSetLayout.SamplerDescriptorSetLayout(this.device, settings.getMaxTextures(), 0, VK_SHADER_STAGE_FRAGMENT_BIT);
+        this.textureDescriptorSetLayout = new DescriptorSetLayout.SamplerDescriptorSetLayout(this.device, settings.maxTextures, 0, VK_SHADER_STAGE_FRAGMENT_BIT);
         this.materialDescSetLayout = new DescriptorSetLayout.DynUniformDescriptorSetLayout(this.device, 0, VK_SHADER_STAGE_FRAGMENT_BIT);
         this.storageDescriptorSetLayout = new DescriptorSetLayout.StorageDescriptorSetLayout(this.device, 0, VK_SHADER_STAGE_FRAGMENT_BIT);
         this.descSetLayouts = new DescriptorSetLayout[]{
@@ -160,7 +160,7 @@ public class GeometryPass implements Closeable {
         var textureCacheSize = textureCacheList.size();
         var textureList = new ArrayList<>(textureCacheList);
         var settings = Configuration.getInstance();
-        var maxTextures = settings.getMaxTextures();
+        var maxTextures = settings.maxTextures;
 
         if (!textureList.isEmpty()) {
             for (var i = 0; i < maxTextures - textureCacheSize; i++)
@@ -171,9 +171,9 @@ public class GeometryPass implements Closeable {
 
     public void recordCommandBuffer(CmdBuffer cmdBuffer, GlobalBuffers globalBuffers, int idx) {
         try (var stack = MemoryStack.stackPush()) {
-            var swapChainExtent = this.swapChain.getSwapChainExtent();
-            var width = swapChainExtent.width();
-            var height = swapChainExtent.height();
+            var swapchainExtent = this.swapchain.getSwapChainExtent();
+            var width = swapchainExtent.width();
+            var height = swapchainExtent.height();
 
             var frameBuffer = this.frameBuffer.getFrameBuffer();
             var attachments = this.frameBuffer.getRenderPass().attachments;
@@ -251,13 +251,13 @@ public class GeometryPass implements Closeable {
     }
 
     public void render() {
-        var idx = this.swapChain.getCurrentFrame();
+        var idx = this.swapchain.getCurrentFrame();
         VkUtils.copyMatrixToBuffer(this.projMatrixUniform, this.scene.getProjection().getProjectionMatrix());
         VkUtils.copyMatrixToBuffer(this.viewMatricesBuffer[idx], this.scene.getCamera().viewMatrix);
     }
 
-    public void resize(Swapchain swapChain) {
-        this.swapChain = swapChain;
-        this.frameBuffer.resize(swapChain);
+    public void resize(Swapchain swapchain) {
+        this.swapchain = swapchain;
+        this.frameBuffer.resize(swapchain);
     }
 }

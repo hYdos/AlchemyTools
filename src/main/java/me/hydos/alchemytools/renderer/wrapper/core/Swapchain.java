@@ -20,7 +20,7 @@ public class Swapchain {
     private final Device device;
     private final ImageView[] imageViews;
     private final SurfaceFormat surfaceFormat;
-    private final VkExtent2D swapChainExtent;
+    private final VkExtent2D swapchainExtent;
     private final SyncSemaphores[] syncSemaphoresList;
     private final long vkSwapChain;
 
@@ -39,7 +39,7 @@ public class Swapchain {
             var numImages = calcNumImages(surfCapabilities, requestedImages);
 
             this.surfaceFormat = calcSurfaceFormat(physicalDevice, surface);
-            this.swapChainExtent = calcSwapChainExtent(display, surfCapabilities);
+            this.swapchainExtent = calcSwapChainExtent(display, surfCapabilities);
 
             var vkSwapchainCreateInfo = VkSwapchainCreateInfoKHR.calloc(stack)
                     .sType(KHRSwapchain.VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR)
@@ -47,7 +47,7 @@ public class Swapchain {
                     .minImageCount(numImages)
                     .imageFormat(this.surfaceFormat.imageFormat())
                     .imageColorSpace(this.surfaceFormat.colorSpace())
-                    .imageExtent(this.swapChainExtent)
+                    .imageExtent(this.swapchainExtent)
                     .imageArrayLayers(1)
                     .imageUsage(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
                     .imageSharingMode(VK_SHARING_MODE_EXCLUSIVE)
@@ -142,7 +142,7 @@ public class Swapchain {
 
     public void close() {
         LOGGER.info("Closing");
-        this.swapChainExtent.free();
+        this.swapchainExtent.free();
 
         var size = this.imageViews != null ? this.imageViews.length : 0;
         for (var i = 0; i < size; i++) {
@@ -153,19 +153,19 @@ public class Swapchain {
         KHRSwapchain.vkDestroySwapchainKHR(this.device.vk(), this.vkSwapChain, null);
     }
 
-    private ImageView[] createImageViews(MemoryStack stack, Device device, long swapChain, int format) {
+    private ImageView[] createImageViews(MemoryStack stack, Device device, long swapchain, int format) {
         ImageView[] result;
 
         var ip = stack.mallocInt(1);
-        VkUtils.ok(KHRSwapchain.vkGetSwapchainImagesKHR(device.vk(), swapChain, ip, null), "Failed to get number of surface images");
+        VkUtils.ok(KHRSwapchain.vkGetSwapchainImagesKHR(device.vk(), swapchain, ip, null), "Failed to get number of surface images");
         var numImages = ip.get(0);
 
-        var swapChainImages = stack.mallocLong(numImages);
-        VkUtils.ok(KHRSwapchain.vkGetSwapchainImagesKHR(device.vk(), swapChain, ip, swapChainImages), "Failed to get surface images");
+        var swapchainImages = stack.mallocLong(numImages);
+        VkUtils.ok(KHRSwapchain.vkGetSwapchainImagesKHR(device.vk(), swapchain, ip, swapchainImages), "Failed to get surface images");
 
         result = new ImageView[numImages];
         var imageViewData = new ImageView.Builder().format(format).aspectMask(VK_IMAGE_ASPECT_COLOR_BIT);
-        for (var i = 0; i < numImages; i++) result[i] = imageViewData.build(device, swapChainImages.get(i));
+        for (var i = 0; i < numImages; i++) result[i] = imageViewData.build(device, swapchainImages.get(i));
 
         return result;
     }
@@ -191,7 +191,7 @@ public class Swapchain {
     }
 
     public VkExtent2D getSwapChainExtent() {
-        return this.swapChainExtent;
+        return this.swapchainExtent;
     }
 
     public SyncSemaphores[] getSyncSemaphoresList() {

@@ -16,20 +16,19 @@ public class Configuration {
     private static final Configuration INSTANCE = Configuration.read();
 
     // Configuration Settings
-    private int maxAnimWeightsBuffer = 1000000;
-    private int maxIndicesBuffer = 5000000;
-    private int maxJointMatricesBuffer = 20000000;
-    private int maxMaterials = 500;
-    private int maxTextures = maxMaterials * 3;
-    private int maxVerticesBuffer = 20000000;
-    private int requestedImages = 3;
-    private boolean shaderRecompilation = true;
-    private float shadowBias = 0.001f;
-    private boolean shadowDebug = false;
-    private int shadowMapSize = 2048;
-    private int ups = 60;
-    private boolean vSync = false;
-    private boolean validate = true;
+    public int animWeightsBufferMaxSize = 1000000;
+    public int indexBufferMaxSize = 5000000;
+    public int jointMatrixBufferMaxSize = 20000000;
+    public int maxMaterials = 500;
+    public int maxTextures = maxMaterials * 3;
+    public int vertexBufferMaxSize = 20000000;
+    public int swapchainImgCount = 3;
+    public float shadowBias = 0.001f;
+    public boolean shadowDebug = false;
+    public int shadowMapSize = 2048;
+    public int animationFps = 60; // FIXME: per animation fps should be used
+    public boolean enableVsync = false;
+    public boolean debug = true;
 
     /**
      * Internal Use Only. DO NOT CALL
@@ -51,61 +50,5 @@ public class Configuration {
 
     public static Configuration getInstance() {
         return INSTANCE;
-    }
-
-    public int getMaxAnimWeightsBuffer() {
-        return this.maxAnimWeightsBuffer;
-    }
-
-    public int getMaxIndicesBuffer() {
-        return this.maxIndicesBuffer;
-    }
-
-    public int getMaxJointMatricesBuffer() {
-        return this.maxJointMatricesBuffer;
-    }
-
-    public int getMaxMaterials() {
-        return this.maxMaterials;
-    }
-
-    public int getMaxTextures() {
-        return this.maxTextures;
-    }
-
-    public int getMaxVerticesBuffer() {
-        return this.maxVerticesBuffer;
-    }
-
-    public int getRequestedImages() {
-        return this.requestedImages;
-    }
-
-    public float getShadowBias() {
-        return this.shadowBias;
-    }
-
-    public int getShadowMapSize() {
-        return this.shadowMapSize;
-    }
-
-    public int getUpdatesPerSecond() {
-        return this.ups;
-    }
-
-    public boolean isShaderRecompilation() {
-        return this.shaderRecompilation;
-    }
-
-    public boolean isShadowDebug() {
-        return this.shadowDebug;
-    }
-
-    public boolean isValidate() {
-        return this.validate;
-    }
-
-    public boolean isvSync() {
-        return this.vSync;
     }
 }

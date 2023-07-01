@@ -1,7 +1,7 @@
 package me.hydos.alchemytools.util.model;
 
 import me.hydos.alchemytools.renderer.scene.ModelData;
-import me.hydos.alchemytools.scene.ARGBCpuTexture;
+import me.hydos.alchemytools.scene.property.ARGBCpuTexture;
 import me.hydos.alchemytools.util.model.animation.Skeleton;
 import org.joml.Matrix4f;
 

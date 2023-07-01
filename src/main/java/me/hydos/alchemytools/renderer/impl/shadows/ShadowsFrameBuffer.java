@@ -25,7 +25,7 @@ public class ShadowsFrameBuffer {
         try (var stack = MemoryStack.stackPush()) {
             var usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
             var settings = Configuration.getInstance();
-            var shadowMapSize = settings.getShadowMapSize();
+            var shadowMapSize = settings.shadowMapSize;
             var depthImage = new Image.Builder()
                     .width(shadowMapSize)
                     .height(shadowMapSize)

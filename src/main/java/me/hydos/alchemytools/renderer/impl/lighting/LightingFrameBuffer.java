@@ -14,10 +14,10 @@ public class LightingFrameBuffer {
 
     private FrameBuffer[] frameBuffers;
 
-    public LightingFrameBuffer(Swapchain swapChain) {
+    public LightingFrameBuffer(Swapchain swapchain) {
         LOGGER.info("Creating Lighting FrameBuffer");
-        this.lightingRenderPass = new LightingRenderPass(swapChain);
-        createFrameBuffers(swapChain);
+        this.lightingRenderPass = new LightingRenderPass(swapchain);
+        createFrameBuffers(swapchain);
     }
 
     public void close() {
@@ -26,18 +26,18 @@ public class LightingFrameBuffer {
         this.lightingRenderPass.close();
     }
 
-    private void createFrameBuffers(Swapchain swapChain) {
+    private void createFrameBuffers(Swapchain swapchain) {
         try (var stack = MemoryStack.stackPush()) {
-            var extent2D = swapChain.getSwapChainExtent();
+            var extent2D = swapchain.getSwapChainExtent();
             var width = extent2D.width();
             var height = extent2D.height();
 
-            var numImages = swapChain.getImageCount();
+            var numImages = swapchain.getImageCount();
             this.frameBuffers = new FrameBuffer[numImages];
             var attachmentsBuff = stack.mallocLong(1);
             for (var i = 0; i < numImages; i++) {
-                attachmentsBuff.put(0, swapChain.getImageViews()[i].vk());
-                this.frameBuffers[i] = new FrameBuffer(swapChain.getDevice(), width, height, attachmentsBuff, this.lightingRenderPass.vk(), 1);
+                attachmentsBuff.put(0, swapchain.getImageViews()[i].vk());
+                this.frameBuffers[i] = new FrameBuffer(swapchain.getDevice(), width, height, attachmentsBuff, this.lightingRenderPass.vk(), 1);
             }
         }
     }
@@ -50,8 +50,8 @@ public class LightingFrameBuffer {
         return this.lightingRenderPass;
     }
 
-    public void resize(Swapchain swapChain) {
+    public void resize(Swapchain swapchain) {
         Arrays.stream(this.frameBuffers).forEach(FrameBuffer::close);
-        createFrameBuffers(swapChain);
+        createFrameBuffers(swapchain);
     }
 }

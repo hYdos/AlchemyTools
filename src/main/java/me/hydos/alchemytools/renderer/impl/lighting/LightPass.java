@@ -58,25 +58,25 @@ public class LightPass {
     private ShaderProgram shaderProgram;
     private VkBuffer[] shadowsMatricesBuffers;
     private DescriptorSet.UniformDescriptorSet[] shadowsMatricesDescriptorSets;
-    private Swapchain swapChain;
+    private Swapchain swapchain;
     private DescriptorSetLayout.UniformDescriptorSetLayout uniformDescriptorSetLayout;
 
-    public LightPass(Swapchain swapChain, CmdPool cmdPool, PipelineCache pipelineCache,
+    public LightPass(Swapchain swapchain, CmdPool cmdPool, PipelineCache pipelineCache,
                      List<Attachment> attachments, Scene scene) {
-        this.swapChain = swapChain;
+        this.swapchain = swapchain;
         this.scene = scene;
-        this.device = swapChain.getDevice();
+        this.device = swapchain.getDevice();
         this.auxVec = new Vector4f();
         this.constants = new ShaderConstants.Builder()
                 .entry(Integer.BYTES, data -> data.putInt(VkConstants.MAX_LIGHTS))
                 .entry(Integer.BYTES, data -> data.putInt(VkConstants.SHADOW_MAP_CASCADE_COUNT))
                 .entry(Integer.BYTES, data -> data.putInt(1))
-                .entry(Float.BYTES, data -> data.putFloat(Configuration.getInstance().getShadowBias()))
-                .entry(Integer.BYTES, data -> data.putInt(Configuration.getInstance().isShadowDebug() ? 1 : 0))
+                .entry(Float.BYTES, data -> data.putFloat(Configuration.getInstance().shadowBias))
+                .entry(Integer.BYTES, data -> data.putInt(Configuration.getInstance().shadowDebug ? 1 : 0))
                 .build();
 
-        this.lightingFrameBuffer = new LightingFrameBuffer(swapChain);
-        var numImages = swapChain.getImageCount();
+        this.lightingFrameBuffer = new LightingFrameBuffer(swapchain);
+        var numImages = swapchain.getImageCount();
         createShaders();
         createDescriptorPool(attachments);
         createUniforms(numImages);
@@ -86,7 +86,7 @@ public class LightPass {
     }
 
     public CmdBuffer beginRecording(List<CascadeShadow> cascadeShadows) {
-        var idx = this.swapChain.getCurrentFrame();
+        var idx = this.swapchain.getCurrentFrame();
         var fence = this.fences[idx];
         var cmdBuffer = this.cmdBuffers[idx];
 
@@ -132,7 +132,7 @@ public class LightPass {
     private void createDescriptorPool(List<Attachment> attachments) {
         List<DescriptorPool.DescriptorTypeCount> descriptorTypeCounts = new ArrayList<>();
         descriptorTypeCounts.add(new DescriptorPool.DescriptorTypeCount(attachments.size(), VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER));
-        descriptorTypeCounts.add(new DescriptorPool.DescriptorTypeCount(this.swapChain.getImageCount() * 3, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER));
+        descriptorTypeCounts.add(new DescriptorPool.DescriptorTypeCount(this.swapchain.getImageCount() * 3, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER));
         this.pools = new PoolManager(this.device, descriptorTypeCounts);
     }
 
@@ -206,10 +206,10 @@ public class LightPass {
 
     public void recordCommandBuffer(CmdBuffer cmdBuffer) {
         try (var stack = MemoryStack.stackPush()) {
-            var idx = this.swapChain.getCurrentFrame();
-            var swapChainExtent = this.swapChain.getSwapChainExtent();
-            var width = swapChainExtent.width();
-            var height = swapChainExtent.height();
+            var idx = this.swapchain.getCurrentFrame();
+            var swapchainExtent = this.swapchain.getSwapChainExtent();
+            var width = swapchainExtent.width();
+            var height = swapchainExtent.height();
 
             var frameBuffer = this.lightingFrameBuffer.getFrameBuffers()[idx];
 
@@ -264,18 +264,18 @@ public class LightPass {
         }
     }
 
-    public void resize(Swapchain swapChain, List<Attachment> attachments) {
-        this.swapChain = swapChain;
+    public void resize(Swapchain swapchain, List<Attachment> attachments) {
+        this.swapchain = swapchain;
         this.attachmentsDescriptorSet.update(attachments);
-        this.lightingFrameBuffer.resize(swapChain);
+        this.lightingFrameBuffer.resize(swapchain);
     }
 
     public void submit(Queue queue) {
         try (var stack = MemoryStack.stackPush()) {
-            var idx = this.swapChain.getCurrentFrame();
+            var idx = this.swapchain.getCurrentFrame();
             var commandBuffer = this.cmdBuffers[idx];
             var currentFence = this.fences[idx];
-            var syncSemaphores = this.swapChain.getSyncSemaphoresList()[idx];
+            var syncSemaphores = this.swapchain.getSyncSemaphoresList()[idx];
             queue.submit(stack.pointers(commandBuffer.vk()),
                     stack.longs(syncSemaphores.geometryCompleteSemaphore().getVkSemaphore()),
                     stack.ints(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT),

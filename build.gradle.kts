@@ -1,5 +1,8 @@
 plugins {
     id("java")
+    id("fr.stardustenterprises.rust.wrapper") version "3.2.5" apply false
+    id("fr.stardustenterprises.rust.importer") version "3.2.5"
+    id("application")
 }
 
 group = "me.hydos"
@@ -47,9 +50,17 @@ dependencies {
     lwjgl("shaderc")
     lwjgl("vma")
     runtimeOnly("org.lwjgl:lwjgl::$lwjglNatives")
+
+    // C# communication
+    rust(project(":NativeScene"))
+}
+
+rustImport {
+    baseDir.set("/META-INF/natives")
+    layout.set("hierarchical")
 }
 
 java {
-    java.sourceCompatibility = JavaVersion.VERSION_21
-    java.targetCompatibility = JavaVersion.VERSION_21
+    java.sourceCompatibility = JavaVersion.VERSION_20
+    java.targetCompatibility = JavaVersion.VERSION_20
 }

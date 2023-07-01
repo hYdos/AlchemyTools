@@ -20,10 +20,10 @@ public class GeometryFrameBuffer implements Closeable {
 
     private FrameBuffer frameBuffer;
 
-    public GeometryFrameBuffer(Swapchain swapChain) {
+    public GeometryFrameBuffer(Swapchain swapchain) {
         LOGGER.info("Creating GeometryFrameBuffer");
-        createAttachments(swapChain);
-        createFrameBuffer(swapChain);
+        createAttachments(swapchain);
+        createFrameBuffer(swapchain);
     }
 
     @Override
@@ -98,10 +98,10 @@ public class GeometryFrameBuffer implements Closeable {
         return this.geometryRenderPass;
     }
 
-    public void resize(Swapchain swapChain) {
+    public void resize(Swapchain swapchain) {
         this.frameBuffer.close();
         this.geometryRenderPass.close();
-        createAttachments(swapChain);
-        createFrameBuffer(swapChain);
+        createAttachments(swapchain);
+        createFrameBuffer(swapchain);
     }
 }

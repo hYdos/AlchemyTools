@@ -45,17 +45,17 @@ public class ShadowPass {
     private DescriptorSet.UniformDescriptorSet[] projMatrixDescriptorSet;
     private ShaderProgram shaderProgram;
     private VkBuffer[] shadowsUniforms;
-    private Swapchain swapChain;
+    private Swapchain swapchain;
     private DescriptorSetLayout.UniformDescriptorSetLayout uniformDescriptorSetLayout;
 
-    public ShadowPass(Swapchain swapChain, PipelineCache pipelineCache, Scene scene) {
-        this.swapChain = swapChain;
+    public ShadowPass(Swapchain swapchain, PipelineCache pipelineCache, Scene scene) {
+        this.swapchain = swapchain;
         this.scene = scene;
-        this.device = swapChain.getDevice();
+        this.device = swapchain.getDevice();
         this.shadowsFrameBuffer = new ShadowsFrameBuffer(this.device);
         createShaders();
-        createDescriptorPool(swapChain.getImageCount());
-        createDescriptorSets(swapChain.getImageCount());
+        createDescriptorPool(swapchain.getImageCount());
+        createDescriptorSets(swapchain.getImageCount());
         createPipeline(pipelineCache);
         createShadowCascades();
     }
@@ -123,7 +123,7 @@ public class ShadowPass {
             clearValues.apply(0, v -> v.depthStencil().depth(1.0f));
 
             var settings = Configuration.getInstance();
-            var shadowMapSize = settings.getShadowMapSize();
+            var shadowMapSize = settings.shadowMapSize;
 
             var cmdHandle = cmdBuffer.vk();
 
@@ -201,7 +201,7 @@ public class ShadowPass {
         if (this.scene.isLightChanged() || true)//this.scene.getCamera().isHasMoved())
             CascadeShadow.updateCascadeShadows(this.cascadeShadows, this.scene);
 
-        var idx = this.swapChain.getCurrentFrame();
+        var idx = this.swapchain.getCurrentFrame();
         var offset = 0;
         for (var cascadeShadow : this.cascadeShadows) {
             VkUtils.copyMatrixToBuffer(this.shadowsUniforms[idx], cascadeShadow.getProjViewMatrix(), offset);
@@ -209,8 +209,8 @@ public class ShadowPass {
         }
     }
 
-    public void resize(Swapchain swapChain) {
-        this.swapChain = swapChain;
+    public void resize(Swapchain swapchain) {
+        this.swapchain = swapchain;
         CascadeShadow.updateCascadeShadows(this.cascadeShadows, this.scene);
     }
 }

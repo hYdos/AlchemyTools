@@ -13,14 +13,14 @@ public class LightingRenderPass {
     private final Device device;
     private final long renderPass;
 
-    public LightingRenderPass(Swapchain swapChain) {
-        this.device = swapChain.getDevice();
+    public LightingRenderPass(Swapchain swapchain) {
+        this.device = swapchain.getDevice();
         try (var stack = MemoryStack.stackPush()) {
             var attachments = VkAttachmentDescription.calloc(1, stack);
 
             // Color attachment
             attachments.get(0)
-                    .format(swapChain.getSurfaceFormat().imageFormat())
+                    .format(swapchain.getSurfaceFormat().imageFormat())
                     .samples(VK_SAMPLE_COUNT_1_BIT)
                     .loadOp(VK_ATTACHMENT_LOAD_OP_CLEAR)
                     .storeOp(VK_ATTACHMENT_STORE_OP_STORE)

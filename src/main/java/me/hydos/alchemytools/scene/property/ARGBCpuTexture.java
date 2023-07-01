@@ -1,4 +1,4 @@
-package me.hydos.alchemytools.scene;
+package me.hydos.alchemytools.scene.property;
 
 import java.nio.ByteBuffer;
 

@@ -94,8 +94,7 @@ public class GpuAnimator {
 
     private void createShaders() {
         var settings = Configuration.getInstance();
-        if (settings.isShaderRecompilation())
-            ImplUtils.compileShaderIfChanged(ANIM_COMPUTE_SHADER_FILE_GLSL, Shaderc.shaderc_compute_shader);
+        if (settings.debug) ImplUtils.compileShaderIfChanged(ANIM_COMPUTE_SHADER_FILE_GLSL, Shaderc.shaderc_compute_shader);
         this.shaderProgram = new ShaderProgram(this.device, new ShaderProgram.ShaderData[]{new ShaderProgram.ShaderData(VK_SHADER_STAGE_COMPUTE_BIT, ImplUtils.get(ANIM_COMPUTE_SHADER_FILE_SPV))});
     }
 

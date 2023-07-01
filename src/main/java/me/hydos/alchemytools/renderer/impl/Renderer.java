@@ -51,41 +51,39 @@ public class Renderer {
     public CmdBuffer[] cmdBuffers;
     public long entityLoadTime;
     public Fence[] fences;
-    public Swapchain swapChain;
+    public Swapchain swapchain;
 
     public Renderer(@NotNull Display display, VulkanCreationContext provider, Scene scene) {
         var settings = Configuration.getInstance();
-        this.instance = new Instance(settings.isValidate(), true, provider);
+        this.instance = new Instance(settings.debug, true, provider);
         this.physicalDevice = PhysicalDevice.createPhysicalDevice(this.instance);
         this.device = new Device(this.instance, this.physicalDevice, provider);
         this.surface = new Surface(this.physicalDevice, display.handle());
         this.graphicsQueue = new Queue.GraphicsQueue(this.device, 0);
         this.presentQueue = new Queue.PresentQueue(this.device, this.surface, 0);
-        this.swapChain = new Swapchain(this.device, this.surface, display, settings.getRequestedImages(), settings.isvSync());
+        this.swapchain = new Swapchain(this.device, this.surface, display, settings.swapchainImgCount, settings.enableVsync);
         this.cmdPool = new CmdPool(this.device, this.graphicsQueue.getQueueFamilyIndex());
         this.pipelineCache = new PipelineCache(this.device);
         this.gpuModels = new ArrayList<>();
         this.textureCache = new TextureCache();
         this.globalBuffers = new GlobalBuffers(this.device);
-        this.geometryPass = new GeometryPass(this.swapChain, this.pipelineCache, scene, this.globalBuffers);
-        this.shadowPass = new ShadowPass(this.swapChain, this.pipelineCache, scene);
+        this.geometryPass = new GeometryPass(this.swapchain, this.pipelineCache, scene, this.globalBuffers);
+        this.shadowPass = new ShadowPass(this.swapchain, this.pipelineCache, scene);
         var attachments = new ArrayList<>(this.geometryPass.getAttachments());
         attachments.add(this.shadowPass.getDepthAttachment());
-        this.lightPass = new LightPass(this.swapChain, this.cmdPool, this.pipelineCache, attachments, scene);
+        this.lightPass = new LightPass(this.swapchain, this.cmdPool, this.pipelineCache, attachments, scene);
         this.computeAnimator = new GpuAnimator(this.cmdPool, this.pipelineCache);
         this.entityLoadTime = 0;
         createCommandBuffers();
     }
 
     private CmdBuffer acquireCurrentCommandBuffer() {
-        var idx = this.swapChain.getCurrentFrame();
-
+        var idx = this.swapchain.getCurrentFrame();
         var fence = this.fences[idx];
         var commandBuffer = this.cmdBuffers[idx];
 
         fence.waitForFence();
         fence.reset();
-
         return commandBuffer;
     }
 
@@ -102,7 +100,7 @@ public class Renderer {
         Arrays.stream(this.cmdBuffers).forEach(CmdBuffer::close);
         Arrays.stream(this.fences).forEach(Fence::close);
         this.cmdPool.close();
-        this.swapChain.close();
+        this.swapchain.close();
         this.surface.close();
         this.globalBuffers.close();
         this.device.close();
@@ -111,7 +109,7 @@ public class Renderer {
     }
 
     private void createCommandBuffers() {
-        var imageCount = swapChain.getImageCount();
+        var imageCount = swapchain.getImageCount();
         this.cmdBuffers = new CmdBuffer[imageCount];
         this.fences = new Fence[imageCount];
 
@@ -148,19 +146,19 @@ public class Renderer {
         if (this.entityLoadTime < scene.lastEntityLoadTime()) {
             this.entityLoadTime = scene.lastEntityLoadTime();
             this.device.waitIdle();
-            this.globalBuffers.loadEntities(this.gpuModels, scene, this.cmdPool, this.graphicsQueue, this.swapChain.getImageCount());
+            this.globalBuffers.loadEntities(this.gpuModels, scene, this.cmdPool, this.graphicsQueue, this.swapchain.getImageCount());
             this.computeAnimator.onAnimatedEntitiesLoaded(this.globalBuffers);
             recordCommands();
         }
         if (display.getWidth() <= 0 && display.getHeight() <= 0) return;
-        if (display.isResized() || this.swapChain.acquireNextImage()) {
+        if (display.isResized() || this.swapchain.acquireNextImage()) {
             display.resetResized();
             resize(display);
             scene.getProjection().resize(display.getWidth(), display.getHeight());
-            this.swapChain.acquireNextImage();
+            this.swapchain.acquireNextImage();
         }
 
-        this.globalBuffers.loadInstanceData(scene, this.gpuModels, this.swapChain.getCurrentFrame());
+        this.globalBuffers.loadInstanceData(scene, this.gpuModels, this.swapchain.getCurrentFrame());
 
         this.computeAnimator.recordCommandBuffer(this.globalBuffers);
         this.computeAnimator.submit();
@@ -175,7 +173,7 @@ public class Renderer {
         this.lightPass.endRecording(commandBuffer);
         this.lightPass.submit(this.graphicsQueue);
 
-        if (this.swapChain.presentImage(this.graphicsQueue)) display.setResized(true);
+        if (this.swapchain.presentImage(this.graphicsQueue)) display.setResized(true);
     }
 
     private void resize(Display display) {
@@ -183,21 +181,21 @@ public class Renderer {
         this.device.waitIdle();
         this.graphicsQueue.waitIdle();
 
-        this.swapChain.close();
-        this.swapChain = new Swapchain(this.device, this.surface, display, settings.getRequestedImages(), settings.isvSync());
-        this.geometryPass.resize(this.swapChain);
-        this.shadowPass.resize(this.swapChain);
+        this.swapchain.close();
+        this.swapchain = new Swapchain(this.device, this.surface, display, settings.swapchainImgCount, settings.enableVsync);
+        this.geometryPass.resize(this.swapchain);
+        this.shadowPass.resize(this.swapchain);
         recordCommands();
         var attachments = new ArrayList<>(this.geometryPass.getAttachments());
         attachments.add(this.shadowPass.getDepthAttachment());
-        this.lightPass.resize(this.swapChain, attachments);
+        this.lightPass.resize(this.swapchain, attachments);
     }
 
     public void submitSceneCommand(Queue queue, CmdBuffer cmdBuffer) {
         try (var stack = MemoryStack.stackPush()) {
-            var idx = this.swapChain.getCurrentFrame();
+            var idx = this.swapchain.getCurrentFrame();
             var currentFence = this.fences[idx];
-            var syncSemaphores = this.swapChain.getSyncSemaphoresList()[idx];
+            var syncSemaphores = this.swapchain.getSyncSemaphoresList()[idx];
             queue.submit(stack.pointers(cmdBuffer.vk()),
                     stack.longs(syncSemaphores.imgAcquisitionSemaphore().getVkSemaphore()),
                     stack.ints(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT),

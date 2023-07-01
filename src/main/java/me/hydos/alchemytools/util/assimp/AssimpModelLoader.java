@@ -1,7 +1,7 @@
 package me.hydos.alchemytools.util.assimp;
 
 import me.hydos.alchemytools.renderer.scene.ModelData;
-import me.hydos.alchemytools.scene.ARGBCpuTexture;
+import me.hydos.alchemytools.scene.property.ARGBCpuTexture;
 import me.hydos.alchemytools.util.ModelLocator;
 import me.hydos.alchemytools.util.model.Mesh;
 import me.hydos.alchemytools.util.model.SceneNode;

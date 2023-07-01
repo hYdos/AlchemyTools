@@ -71,7 +71,6 @@ public class PhysicalDevice implements VkWrapper<VkPhysicalDevice> {
                 var vkPhysicalDevice = new VkPhysicalDevice(pPhysicalDevices.get(i), instance.vk());
                 var physicalDevice = new PhysicalDevice(vkPhysicalDevice);
 
-                var deviceName = physicalDevice.getDeviceName();
                 if (physicalDevice.hasGraphicsQueueFamily() && physicalDevice.hasKHRSwapChainExtension()) {
                     LOGGER.info("Viable: true");
                     devices.add(physicalDevice);

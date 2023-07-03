@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlchemyReader", "AlchemyReader\AlchemyReader.csproj", "{92A85079-A542-4F74-ABBB-C7C5AB941AA1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlchemyEditor", "AlchemyEditor\AlchemyEditor.csproj", "{F453C101-CAAC-41D8-8424-167B107BA083}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{92A85079-A542-4F74-ABBB-C7C5AB941AA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92A85079-A542-4F74-ABBB-C7C5AB941AA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92A85079-A542-4F74-ABBB-C7C5AB941AA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92A85079-A542-4F74-ABBB-C7C5AB941AA1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F453C101-CAAC-41D8-8424-167B107BA083}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F453C101-CAAC-41D8-8424-167B107BA083}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F453C101-CAAC-41D8-8424-167B107BA083}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F453C101-CAAC-41D8-8424-167B107BA083}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

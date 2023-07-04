@@ -21,6 +21,10 @@ fun DependencyHandlerScope.lwjgl(name: String, useNatives: Boolean = true) {
 }
 
 dependencies {
+    // Networking
+    implementation("io.netty:netty-all:4.1.94.Final")
+
+
     // Google
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("com.google.guava:guava:31.1-jre")
@@ -51,8 +55,13 @@ dependencies {
 }
 
 java {
-    java.sourceCompatibility = JavaVersion.VERSION_20
-    java.targetCompatibility = JavaVersion.VERSION_20
+
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+
+//    java.sourceCompatibility = JavaVersion.VERSION_21
+//    java.targetCompatibility = JavaVersion.VERSION_21
 }
 
 tasks.withType<JavaCompile> {

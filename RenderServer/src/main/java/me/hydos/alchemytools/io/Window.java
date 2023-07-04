@@ -13,15 +13,15 @@ public class Window implements Display {
     private boolean resized;
     private int width;
 
-    public Window(String title) {
+    public Window(String title, int width, int height) {
         if (!glfwInit()) throw new IllegalStateException("Unable to initialize GLFW");
 
         if (!glfwVulkanSupported())
             throw new IllegalStateException("Cannot find a compatible Vulkan Driver");
 
         var vidMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-        this.width = (int) (vidMode.width() / 1.5);
-        this.height = (int) (vidMode.height() / 1.5);
+        this.width = width == 0 ? (int) (vidMode.width() / 1.5) : width;
+        this.height = height == 0 ?(int) (vidMode.height() / 1.5) : height;
 
         glfwDefaultWindowHints();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);

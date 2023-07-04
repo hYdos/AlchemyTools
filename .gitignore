@@ -27,3 +27,5 @@ logs/
 /log4j2.alchemytools.xml
 */target
 */obj/
+*/bin/
+*/log4j2.*

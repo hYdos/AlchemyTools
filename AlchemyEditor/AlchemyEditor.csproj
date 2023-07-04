@@ -7,4 +7,10 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Fmod5Sharp" Version="3.0.1" />
+        <ProjectReference Include="..\RenderClient\RenderClient.csproj" />
+        <ProjectReference Include="..\AlchemyReader\AlchemyReader.csproj" />
+    </ItemGroup>
+
 </Project>

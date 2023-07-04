@@ -28,7 +28,7 @@ public class AssimpTestScene {
 
     public AssimpTestScene() {
         LoggerSetup.onInitialize();
-        this.display = new Window("Assimp Test Scene");
+        this.display = new Window("Assimp Test Scene", 0, 0);
         this.scene = new me.hydos.alchemytools.renderer.scene.Scene(display);
         this.renderer = new Renderer(display, new VulkanCreationContext("assimp_test_scene"), this.scene);
         onInitialize();

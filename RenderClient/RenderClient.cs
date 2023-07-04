@@ -15,7 +15,7 @@ public class RenderClient : IDisposable {
     private static readonly Queue<Action> NetworkQueue = new();
     private readonly MultithreadEventLoopGroup _workerGroup;
     private readonly int _port;
-    private readonly Thread _networkThread;
+    private readonly Task _networkThread;
     private bool _close;
     private IChannel? _channel;
 
@@ -26,8 +26,7 @@ public class RenderClient : IDisposable {
     public RenderClient(int port) {
         _workerGroup = new MultithreadEventLoopGroup();
         _port = port;
-        _networkThread = new Thread(NetworkThreadWorker);
-        _networkThread.Start();
+        _networkThread = Task.Run(NetworkThreadWorker);
     }
 
     public void SendPacket(Packet packet) {
@@ -37,7 +36,7 @@ public class RenderClient : IDisposable {
         });
     }
 
-    private async void NetworkThreadWorker() {
+    private async Task NetworkThreadWorker() {
         var b = new Bootstrap();
         b.Group(_workerGroup)
             .Channel<TcpSocketChannel>()
@@ -61,8 +60,7 @@ public class RenderClient : IDisposable {
 
     public async void Dispose() {
         _close = true;
-        await _channel.CloseAsync();
+        await _channel?.CloseAsync()!;
         await _workerGroup.ShutdownGracefullyAsync();
-        _networkThread.Join();
     }
 }

@@ -9,6 +9,7 @@
 
     <ItemGroup>
       <PackageReference Include="Fmod5Sharp" Version="3.0.1" />
+      <PackageReference Include="LibUsbDotNet" Version="3.0.102-alpha" />
         <ProjectReference Include="..\RenderClient\RenderClient.csproj" />
         <ProjectReference Include="..\AlchemyReader\AlchemyReader.csproj" />
     </ItemGroup>

@@ -1,4 +1,5 @@
-﻿using DotNetty.Transport.Bootstrapping;
+﻿using System.Net;
+using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Channels.Sockets;
 using RenderClient.netty;
@@ -28,7 +29,12 @@ public class RenderClient : IDisposable {
     }
 
     public void SendPacket(Packet packet) {
-        NetworkQueue.Enqueue(() => { _channel?.WriteAndFlushAsync(packet); });
+        using var stream = new MemoryStream();
+        using (var writer = new BinaryWriter(stream)) {
+            packet.Write(writer);
+        }
+
+        _channel?.WriteAndFlushAsync(new ChannelMessage(C2SPackets.IndexOf(packet.GetType()), 0, stream.ToArray()));
     }
 
     public async Task Start() {
@@ -42,9 +48,10 @@ public class RenderClient : IDisposable {
                     new PacketProcessor(),
                     new ExceptionHandler());
             }))
+            .Option(ChannelOption.SoKeepalive, true)
             .Option(ChannelOption.TcpNodelay, true);
 
-        _channel = await b.ConnectAsync("localhost", _port);
+        _channel = await b.ConnectAsync(new IPEndPoint(IPAddress.Loopback, _port));
 
         while (!_close) {
             ProcessNetworkQueue();

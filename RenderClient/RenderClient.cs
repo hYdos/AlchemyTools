@@ -1,9 +1,10 @@
 ﻿using System.Net;
+using System.Threading.Channels;
 using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Channels.Sockets;
 using RenderClient.netty;
-using RenderClient.packets.init;
+using RenderClient.packets;
 
 namespace RenderClient;
 
@@ -13,14 +14,15 @@ namespace RenderClient;
 public class RenderClient : IDisposable {
     private static readonly List<Type> C2SPackets = new();
     private static readonly List<Packet> S2CPackets = new();
-    private static readonly Queue<Action> NetworkQueue = new();
+    private readonly Channel<Packet> NetworkQueue = Channel.CreateUnbounded<Packet>();
     private readonly MultithreadEventLoopGroup _workerGroup;
     private readonly int _port;
-    private bool _close;
+    private volatile bool _close;
     private IChannel? _channel;
 
     static RenderClient() {
         C2SPackets.Add(typeof(C2SInitRenderer));
+        C2SPackets.Add(typeof(C2SPingPacket));
     }
 
     public RenderClient(int port) {
@@ -29,12 +31,7 @@ public class RenderClient : IDisposable {
     }
 
     public void SendPacket(Packet packet) {
-        using var stream = new MemoryStream();
-        using (var writer = new BinaryWriter(stream)) {
-            packet.Write(writer);
-        }
-
-        _channel?.WriteAndFlushAsync(new ChannelMessage(C2SPackets.IndexOf(packet.GetType()), 0, stream.ToArray()));
+        NetworkQueue.Writer.TryWrite(packet);
     }
 
     public async Task Start() {
@@ -53,23 +50,35 @@ public class RenderClient : IDisposable {
 
         _channel = await b.ConnectAsync(new IPEndPoint(IPAddress.Loopback, _port));
 
-        while (!_close) {
-            ProcessNetworkQueue();
+        try {
+            while (!_close) {
+                await ProcessNetworkQueue();
+            }
+        }
+        catch (ChannelClosedException) {
+            //ignored
         }
 
         _close = true;
     }
 
-    private static void ProcessNetworkQueue() {
-        while (NetworkQueue.Count > 0) {
-            var action = NetworkQueue.Dequeue();
-            action();
+    private async Task ProcessNetworkQueue() {
+        var packet = await NetworkQueue.Reader.ReadAsync();
+
+        using var stream = new MemoryStream();
+        await using (var writer = new BinaryWriter(stream)) {
+            packet.Write(writer);
         }
+
+        await _channel!.WriteAndFlushAsync(new ChannelMessage(C2SPackets.IndexOf(packet.GetType()), 0, stream.ToArray()));
     }
 
     public async void Dispose() {
         _close = true;
-        await _channel?.CloseAsync()!;
+        NetworkQueue.Writer.Complete();
+        if (_channel != null)
+            await _channel.CloseAsync();
+
         await _workerGroup.ShutdownGracefullyAsync();
     }
 }

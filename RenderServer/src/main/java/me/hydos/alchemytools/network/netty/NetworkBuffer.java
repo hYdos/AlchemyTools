@@ -1,4 +1,4 @@
-package me.hydos.alchemytools.network;
+package me.hydos.alchemytools.network.netty;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -16,10 +16,6 @@ public class NetworkBuffer {
         return (byte) Byte.toUnsignedInt(internalBuffer.get());
     }
 
-    public byte readByte(int idx) {
-        return (byte) Byte.toUnsignedInt(internalBuffer.get(idx));
-    }
-
     public int readInt() {
         return internalBuffer.getInt();
     }
@@ -32,16 +28,12 @@ public class NetworkBuffer {
         return internalBuffer.getShort();
     }
 
-    public short readShort(int idx) {
-        return internalBuffer.getShort(idx);
-    }
-
     public char readChar() {
         return (char) internalBuffer.get();
     }
 
-    public char readChar(int idx) {
-        return internalBuffer.getChar(idx);
+    public long readLong() {
+        return internalBuffer.getLong();
     }
 
     public String readString() {

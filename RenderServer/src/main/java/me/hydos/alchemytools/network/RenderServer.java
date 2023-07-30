@@ -8,8 +8,10 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import me.hydos.alchemytools.network.netty.MessageDecoder;
 import me.hydos.alchemytools.network.netty.MessageEncoder;
+import me.hydos.alchemytools.network.netty.NetworkBuffer;
 import me.hydos.alchemytools.network.netty.PacketProcessor;
 import me.hydos.alchemytools.network.packets.C2SInitRenderer;
+import me.hydos.alchemytools.network.packets.C2SPingPacket;
 import me.hydos.alchemytools.network.packets.Packet;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -71,5 +73,6 @@ public class RenderServer extends Thread implements Closeable {
 
     static {
         C2S_PACKETS.add(C2SInitRenderer::new);
+        C2S_PACKETS.add(C2SPingPacket::new);
     }
 }

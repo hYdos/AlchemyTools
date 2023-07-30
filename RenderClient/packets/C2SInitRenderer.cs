@@ -1,4 +1,4 @@
-﻿namespace RenderClient.packets.init; 
+﻿namespace RenderClient.packets;
 
 public class C2SInitRenderer : Packet {
     private readonly int _width;
